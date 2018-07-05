@@ -38,19 +38,22 @@ resource "aws_iam_role" "lambda_exec" {
 EOF
 }
 
-//resource "aws_sns_topic_subscription" "lambda" {
-//  topic_arn = "${aws_sns_topic.upload.arn}"
-//  protocol  = "lambda"
-//  endpoint  = "${aws_lambda_function.slack.arn}"
-//}
+data "aws_iam_policy" "AWSLambdaKinesisExecutionRole" {
+  arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+}
 
-//resource "aws_lambda_permission" "sns" {
-//  statement_id  = "AllowExecutionFromSNS"
-//  action        = "lambda:InvokeFunction"
-//  function_name = "${aws_lambda_function.slack.function_name}"
-//  principal     = "sns.amazonaws.com"
-//  source_arn = "${aws_sns_topic.upload.arn}"
-//}
+resource "aws_iam_role_policy_attachment" "lambda_kinesis" {
+  role = "${aws_iam_role.lambda_exec.name}"
+  policy_arn = "${data.aws_iam_policy.AWSLambdaKinesisExecutionRole.arn}"
+}
+
+resource "aws_lambda_event_source_mapping" "event_source_mapping" {
+  batch_size        = 10
+  event_source_arn  = "${aws_kinesis_stream.sensors.arn}"
+  enabled           = true
+  function_name     = "${aws_lambda_function.kinesis.id}"
+  starting_position = "LATEST"
+}
 
 resource "aws_iam_policy" "lambda_logging" {
   name        = "${local.project_name}-lambda-logging"
