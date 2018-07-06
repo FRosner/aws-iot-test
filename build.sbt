@@ -16,7 +16,7 @@ lazy val assemblySettings = Seq(
   addArtifact(artifact in (Compile, assembly), assembly)
 )
 
-lazy val root = (project in file("kinesis-consumer"))
+lazy val kinesis = (project in file("kinesis-consumer"))
   .settings(commonSettings: _*)
   .settings(assemblySettings: _*)
   .settings(
@@ -25,7 +25,8 @@ lazy val root = (project in file("kinesis-consumer"))
       "com.amazonaws" % "aws-java-sdk-kinesis" % "1.11.360",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
       "com.amazonaws" % "aws-lambda-java-events" % "2.2.2",
-      "com.amazonaws" % "amazon-kinesis-client" % "1.9.1"
+      "com.amazonaws" % "amazon-kinesis-client" % "1.9.1",
+      "net.debasishg" %% "redisclient" % "3.7"
     ) ++ List(
       "io.circe" %% "circe-core",
       "io.circe" %% "circe-generic",

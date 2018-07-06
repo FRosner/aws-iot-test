@@ -5,4 +5,6 @@ resource "aws_elasticache_cluster" "sensors" {
   num_cache_nodes      = 1
   parameter_group_name = "default.redis4.0"
   port                 = "${var.redis_port}"
+  security_group_ids   = ["${data.aws_security_group.default.id}"]
+  apply_immediately    = true
 }

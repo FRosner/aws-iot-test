@@ -16,6 +16,18 @@ resource "aws_lambda_function" "kinesis" {
   role             = "${aws_iam_role.lambda_exec.arn}"
   memory_size      = 1024
   timeout          = 5
+
+  vpc_config {
+    security_group_ids = ["${data.aws_security_group.default.id}"]
+    subnet_ids = ["${data.aws_subnet_ids.default.ids[0]}", "${data.aws_subnet_ids.default.ids[1]}"]
+  }
+
+  environment {
+    variables {
+      redis_port = "${aws_elasticache_cluster.sensors.port}"
+      redis_url = "${aws_elasticache_cluster.sensors.cache_nodes.0.address}"
+    }
+  }
 }
 
 resource "aws_iam_role" "lambda_exec" {
@@ -42,9 +54,18 @@ data "aws_iam_policy" "AWSLambdaKinesisExecutionRole" {
   arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
 }
 
+data "aws_iam_policy" "AWSLambdaVPCAccessExecutionRole" {
+  arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
 resource "aws_iam_role_policy_attachment" "lambda_kinesis" {
   role = "${aws_iam_role.lambda_exec.name}"
   policy_arn = "${data.aws_iam_policy.AWSLambdaKinesisExecutionRole.arn}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_vpc" {
+  role = "${aws_iam_role.lambda_exec.name}"
+  policy_arn = "${data.aws_iam_policy.AWSLambdaVPCAccessExecutionRole.arn}"
 }
 
 resource "aws_lambda_event_source_mapping" "event_source_mapping" {
