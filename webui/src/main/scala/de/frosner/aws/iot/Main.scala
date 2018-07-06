@@ -2,11 +2,11 @@ package de.frosner.aws.iot
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
+import akka.http.scaladsl.model.ws.TextMessage
 import akka.http.scaladsl.server.Directives._
-import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Flow, Sink, Source}
-import com.typesafe.config.ConfigFactory
+import akka.stream.scaladsl.{BroadcastHub, Keep, Sink, Source}
+import akka.stream.{ActorMaterializer, OverflowStrategy}
+import com.redis.{M, RedisClient, S}
 
 import scala.util.{Failure, Success, Try}
 
@@ -14,25 +14,34 @@ object Main extends App {
 
   implicit val system = ActorSystem("my-system")
   implicit val materializer = ActorMaterializer()
-  // needed for the future flatMap/onComplete in the end
   implicit val executionContext = system.dispatcher
 
-  val handler: Flow[Message, Message, Any] =
-    Flow[Message].mapConcat {
-      case tm: TextMessage =>
-        TextMessage(Source.single("Hello ") ++ tm.textStream ++ Source.single("!")) :: Nil
-      case bm: BinaryMessage =>
-        // ignore binary messages but drain content to avoid the stream being clogged
-        bm.dataStream.runWith(Sink.ignore)
-        Nil
-    }
+  private val redis_port = System.getenv("redis_port").toInt
+  private val redis_url = System.getenv("redis_url")
+  private val redis = new RedisClient(redis_url, redis_port)
+
+  // https://stackoverflow.com/questions/49028905/whats-the-simplest-way-to-use-sse-with-redis-pub-sub-and-akka-streams
+  val (redisActor, redisSource) =
+    Source.actorRef[String](1000, OverflowStrategy.dropTail)
+      .map(s => TextMessage(s))
+      .toMat(BroadcastHub.sink[TextMessage])(Keep.both)
+      .run()
+
+  redis.subscribe("sensors") {
+    case M(channel, message) =>
+      println(s"Forwarding message $message")
+      redisActor ! message
+    case S(channel, noSubscribed) => println(s"Successfully subscribed to channel $channel")
+    case other => println(s"Ignoring message from redis: $other")
+  }
 
   val route =
     path("ws") {
-      handleWebSocketMessages(handler)
+      extractUpgradeToWebSocket { upgrade =>
+        complete(upgrade.handleMessagesWithSinkSource(Sink.ignore, redisSource))
+      }
     }
 
-  val config = ConfigFactory.load()
   val interface = Option(System.getenv("INTERFACE")).getOrElse("0.0.0.0")
   val port = Try(System.getenv("PORT").toInt) match {
     case Success(i) => i
