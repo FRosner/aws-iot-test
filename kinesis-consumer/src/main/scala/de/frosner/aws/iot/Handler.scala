@@ -13,7 +13,6 @@ class Handler extends RequestHandler[KinesisEvent, Void] {
 
   private val port = System.getenv("redis_port").toInt
   private val url = System.getenv("redis_url")
-  require(port != null && url != null, "Invalid redis endpoint (format $redis_url:$redis_port): '" + s"$url:$port" + "'")
 
   override def handleRequest(input: KinesisEvent, context: Context): Void = {
     val logger = context.getLogger
@@ -24,14 +23,14 @@ class Handler extends RequestHandler[KinesisEvent, Void] {
       val data = new String(record.getKinesis.getData.array())
       logger.log(s"data: $data")
       val uuid = UUID.randomUUID()
-      redis.set(
-        key = s"${System.currentTimeMillis()}-$uuid",
-        value = data
+      redis.publish(
+        channel = "sensors",
+        msg = data
       )
     }
-    val successAndFailure = recordsWritten.groupBy(identity).mapValues(_.length)
-    logger.log(s"Successful writes: ${successAndFailure.getOrElse(true, 0)}")
-    logger.log(s"Failed writes: ${successAndFailure.getOrElse(false, 0)}")
+    val successAndFailure = recordsWritten.groupBy(_.isDefined).mapValues(_.length)
+    logger.log(s"Successfull published messages: ${successAndFailure.getOrElse(true, 0)}")
+    logger.log(s"Failed messages: ${successAndFailure.getOrElse(false, 0)}")
     null
   }
 
