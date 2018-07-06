@@ -1,12 +1,3 @@
-variable "kinesis_lambda_version" {
-  type    = "string"
-  default = "0.1-SNAPSHOT"
-}
-
-locals {
-  lambda_artifact = "../kinesis-consumer/target/scala-2.12/aws-kinesis-consumer-assembly-${var.kinesis_lambda_version}.jar"
-}
-
 resource "aws_lambda_function" "kinesis" {
   function_name    = "${local.project_name}"
   filename         = "${local.lambda_artifact}"
