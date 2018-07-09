@@ -16,8 +16,11 @@ object Main extends App {
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
 
+  System.getenv().forEach((x, y) => println(s"$x=$y"))
+
   private val redis_port = System.getenv("redis_port").toInt
   private val redis_url = System.getenv("redis_url")
+  println(s"Connecting to Redis at $redis_url:$redis_port")
   private val redis = new RedisClient(redis_url, redis_port)
   private val redisPubSub = new RedisClient(redis_url, redis_port)
 
