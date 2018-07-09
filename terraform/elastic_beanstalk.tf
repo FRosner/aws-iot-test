@@ -12,6 +12,61 @@ resource "aws_elastic_beanstalk_environment" "webui" {
     name      = "IamInstanceProfile"
     value     = "${aws_iam_instance_profile.webui.name}"
   }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name = "redis_url"
+    value = "${aws_elasticache_cluster.sensors.cache_nodes.0.address}"
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name = "redis_port"
+    value = "${aws_elasticache_cluster.sensors.port}"
+  }
+  setting {
+    namespace = "aws:elb:loadbalancer"
+    name      = "LoadBalancerPortProtocol"
+    value     = "TCP"
+  }
+  setting {
+    namespace = "aws:ec2:vpc"
+    name      = "VPCId"
+    value     = "${aws_vpc.main.id}"
+  }
+  setting {
+    namespace = "aws:ec2:vpc"
+    name = "Subnets"
+    value = "${aws_subnet.private-1.id},${aws_subnet.private-2.id}"
+  }
+  setting {
+    namespace = "aws:ec2:vpc"
+    name = "AssociatePublicIpAddress"
+    value = "false"
+  }
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name = "SecurityGroups"
+    value = "${aws_security_group.all_out.id}"
+  }
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name = "InstanceType"
+    value = "t2.micro"
+  }
+  setting {
+    namespace = "aws:ec2:vpc"
+    name = "ELBScheme"
+    value = "public"
+  }
+  setting {
+    namespace = "aws:ec2:vpc"
+    name = "ELBSubnets"
+    value = "${aws_subnet.public-1.id},${aws_subnet.public-2.id}"
+  }
+  setting {
+    namespace = "aws:elb:loadbalancer"
+    name = "CrossZone"
+    value = "true"
+  }
 }
 
 resource "aws_iam_role" "webui" {

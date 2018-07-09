@@ -9,8 +9,8 @@ resource "aws_lambda_function" "kinesis" {
   timeout          = 5
 
   vpc_config {
-    security_group_ids = ["${data.aws_security_group.default.id}"]
-    subnet_ids = ["${data.aws_subnet_ids.default.ids[0]}", "${data.aws_subnet_ids.default.ids[1]}"]
+    security_group_ids = ["${aws_security_group.all_out.id}"]
+    subnet_ids = ["${aws_subnet.private-1.id}"]
   }
 
   environment {
