@@ -43,6 +43,8 @@ object Main extends App {
       extractUpgradeToWebSocket { upgrade =>
         complete(upgrade.handleMessagesWithSinkSource(Sink.ignore, redisSource))
       }
+    } ~ path("") {
+      getFromResource("index.html")
     }
 
   val interface = Option(System.getenv("INTERFACE")).getOrElse("0.0.0.0")

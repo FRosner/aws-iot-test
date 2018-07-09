@@ -1,0 +1,69 @@
+<html>
+<head>
+    <title>WebSocket client example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="http://fargo.io/code/jquery-1.9.1.min.js"></script>
+    <link href="http://fargo.io/code/ubuntuFont.css" rel="stylesheet" type="text/css">
+    <script>
+            var loc = window.location, new_uri;
+            if (loc.protocol === "https:") {
+                new_uri = "wss:";
+            } else {
+                new_uri = "ws:";
+            }
+            new_uri += "//" + loc.host;
+            new_uri += loc.pathname + "ws";
+			var socketUrl = new_uri;
+
+			function WebSocketTest() {
+                if ("WebSocket" in window) {
+                    // Let us open a web socket
+                    console.log("Connecting to " + socketUrl);
+                    var ws = new WebSocket(socketUrl);
+
+                    ws.onopen = function() {
+                        console.log("Connection established");
+                    };
+
+                    ws.onmessage = function (evt) {
+                        var msg = JSON.parse(evt.data);
+                        console.log("Message received: " + msg);
+                        $("#lastUpdate").text(new Date());
+                        $("#lastMessage").text(msg.latest);
+                        $("#messageCount").text(msg.count);
+                    };
+
+                    ws.onclose = function() {
+                      console.log("Connection closed");
+                    };
+                } else {
+                   console.log("WebSocket not supported by your browser!");
+                }
+            }
+			</script>
+    <style>
+			body {
+				font-family: Ubuntu;
+				font-size: 18px;
+				background-color: whitesmoke;
+				}
+			.divPageBody {
+				width: 60%;
+				margin-top: 90px;
+				margin-left: auto;
+				margin-right: auto;
+				}
+			</style>
+</head>
+<body>
+<div>
+    <p>Message count: <span id="messageCount"></span></p>
+    <p>Last message: <span id="lastMessage"></span></p>
+    <p>Last update: <span id="lastUpdate"></span></p>
+</div>
+<script>
+$(document).ready(WebSocketTest);
+</script>
+</body>
+</html>
