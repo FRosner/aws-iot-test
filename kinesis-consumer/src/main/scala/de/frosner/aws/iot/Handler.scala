@@ -23,11 +23,13 @@ class Handler extends RequestHandler[KinesisEvent, Void] {
       val data = new String(record.getKinesis.getData.array())
       logger.log(s"data: $data")
       val uuid = UUID.randomUUID()
-      redis.publish(
-        channel = "sensors",
-        msg = data
-      )
+      redis.set("sensorLatest", data)
+      redis.incr("sensorCount")
     }
+    redis.publish(
+      channel = "sensors",
+      msg = "updated"
+    )
     val successAndFailure = recordsWritten.groupBy(_.isDefined).mapValues(_.length)
     logger.log(s"Successfull published messages: ${successAndFailure.getOrElse(true, 0)}")
     logger.log(s"Failed messages: ${successAndFailure.getOrElse(false, 0)}")

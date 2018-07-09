@@ -19,6 +19,7 @@ object Main extends App {
   private val redis_port = System.getenv("redis_port").toInt
   private val redis_url = System.getenv("redis_url")
   private val redis = new RedisClient(redis_url, redis_port)
+  private val redisPubSub = new RedisClient(redis_url, redis_port)
 
   // https://stackoverflow.com/questions/49028905/whats-the-simplest-way-to-use-sse-with-redis-pub-sub-and-akka-streams
   val (redisActor, redisSource) =
@@ -27,10 +28,12 @@ object Main extends App {
       .toMat(BroadcastHub.sink[TextMessage])(Keep.both)
       .run()
 
-  redis.subscribe("sensors") {
+  redisPubSub.subscribe("sensors") {
     case M(channel, message) =>
-      println(s"Forwarding message $message")
-      redisActor ! message
+      println(s"Received message '$message'")
+      val latest = redis.get("sensorLatest")
+      val count = redis.get("sensorCount")
+      redisActor ! s"""{ "latest": "${latest.getOrElse("0")}", "count": "${count.getOrElse("0")}" }"""
     case S(channel, noSubscribed) => println(s"Successfully subscribed to channel $channel")
     case other => println(s"Ignoring message from redis: $other")
   }
