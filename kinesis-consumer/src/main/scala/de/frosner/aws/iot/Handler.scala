@@ -22,7 +22,6 @@ class Handler extends RequestHandler[KinesisEvent, Void] {
       logger.log(record.toString)
       val data = new String(record.getKinesis.getData.array())
       logger.log(s"data: $data")
-      val uuid = UUID.randomUUID()
       redis.set("sensorLatest", data)
       redis.incr("sensorCount")
     }
