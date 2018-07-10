@@ -4,10 +4,9 @@
 
 This is the result of my AWS infrastructure Kata involving IoT Core, Kinesis, Lambda, ElastiCache, Elastic Beanstalk, and S3.
 The goal is to route incoming MQTT messages towards an S3 bucket for persistence, as well as showing some aggregated statistics on a web interface.
+For a detailed explanation please refer to the corresponding blog post: [Sensor Data Processing on AWS using IoT Core, Kinesis and ElastiCache](#)
 
 ![architecture](https://res.cloudinary.com/practicaldev/image/fetch/s--DQk3izBA--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_880/https://thepracticaldev.s3.amazonaws.com/i/1zm11u6uwpo9vi3gureo.png)
-
-For a detailed explanation please refer to the corresponding blog post: [Sensor Data Processing on AWS using IoT Core, Kinesis and ElastiCache](#)
 
 ## Usage
 
